@@ -119,6 +119,8 @@ const keyShifts = {
   8:1, 9:2, 10:2, 11:2, 12:2, 13:2, 14:2, 15:1
 }
 
+let keys = []
+
 // HEXADECIMAL functions
 const string2hex = (str, ret = '') => { // correct
   str.split('').forEach((item, index) => {
@@ -167,25 +169,6 @@ const xor = (a, b, item2, ret = '') => {
   return ret;
 }
 
-// BINARY to chunks
-const bin2chunks6 = str => {
-  let ret = '', chunks = []
-  chunks = str.match(/.{1,6}/g)
-  chunks.forEach(item => {
-    ret += item + ' '
-  })
-  return ret
-}
-
-const hex2chunks2 = str => {
-  let ret = '', chunks = []
-  chunks = str.match(/.{2}/g)
-  chunks.forEach(item => {
-    ret += item + ' '
-  })
-  return ret
-}
-
 const initPermutation = (m, ret = []) => {
   initPermutationMatrix.forEach(item => {
     ret += m[item - 1]
@@ -201,73 +184,99 @@ const finalPermutation = (m, ret = '') => {
   return ret
 }
 
-const initPermuteKey = (key, permutePC1 = '', half = [], remember = '', permutePC2 = '', ret = '') => {
+const permuteKey = async (key, permutePC1 = '', halfPart1 = [], halfPart2 = [], remember = '') => {
+  // permuted choice 1
   permuteKeyMatrixPC1.forEach(item => {
     permutePC1 += key[item - 1]
   })
-  half = permutePC1.match(/.{28}?/g)
-  half.forEach(item => {
-    item.split('').forEach((char, index) => {
-      if (index === 0) {
-        remember = char
-      } else if (index === 27) {
-        permutePC2 += char + remember
-      } else {
-        permutePC2 += char
-      }
-    })
-  })
-  permuteKeyMatrixPC2.forEach(item => {
-    ret += permutePC2[item - 1]
-  })
-  return ret
-}
-
-const permuteKey = (iteration, key , halfPart1 = [], halfPart2 = [], part1 = '', part2 = '', remember = '', ret = '') => {
-  halfPart1 = key.match(/.{28}?/g)
-  console.log(key, keyShifts[iteration], halfPart1)
-  halfPart1.forEach(item => {
-    item.split('').forEach((char, index) => {
-      if (index === 0) {
-        remember = char
-      } else if (index === 27) {
-        part1 += char + remember
-        remember = ''
-      } else {
-        part1 += char
-      }
-    })
-  })
-  if (keyShifts[iteration] > 1) {
-    halfPart2 = part1.match(/.{28}?/g)
-    halfPart2.forEach(item => {
+  // 16 left shifts
+  for (let i = 0; i < 16; i++) { 
+    let ret = '', part1 = '', part2 = ''
+    halfPart1 = permutePC1.match(/.{28}?/g)
+    permutePC1 = ''
+    halfPart1.forEach(item => {
       item.split('').forEach((char, index) => {
         if (index === 0) {
           remember = char
         } else if (index === 27) {
-          part2 += char + remember
+          part1 += char + remember
           remember = ''
         } else {
-          part2 += char
+          part1 += char
         }
       })
     })
-    permuteKeyMatrixPC2.forEach(item => {
-      ret += part2[item - 1]
-    })
-  } else {
-    permuteKeyMatrixPC2.forEach(item => {
-      ret += part1[item - 1]
-    })
+    if (keyShifts[i] > 1) {
+      halfPart2 = part1.match(/.{28}?/g)
+      halfPart2.forEach(item => {
+        item.split('').forEach((char, index) => {
+          if (index === 0) {
+            remember = char
+          } else if (index === 27) {
+            part2 += char + remember
+            remember = ''
+          } else {
+            part2 += char
+          }
+        })
+      })
+      permutePC1 = part2
+      permuteKeyMatrixPC2.forEach(item => {
+        ret += part2[item - 1]
+      })
+    } else {
+      permutePC1 = part1
+      permuteKeyMatrixPC2.forEach(item => {
+        ret += part1[item - 1]
+      })
+    }
+    keys.push(ret)
   }
-  return ret
 }
+
+// const permuteKey = (iteration, key , halfPart1 = [], halfPart2 = [], part1 = '', part2 = '', remember = '', ret = '') => {
+//   halfPart1 = key.match(/.{28}?/g)
+//   halfPart1.forEach(item => {
+//     item.split('').forEach((char, index) => {
+//       if (index === 0) {
+//         remember = char
+//       } else if (index === 27) {
+//         part1 += char + remember
+//         remember = ''
+//       } else {
+//         part1 += char
+//       }
+//     })
+//   })
+//   if (keyShifts[iteration] > 1) {
+//     halfPart2 = part1.match(/.{28}?/g)
+//     halfPart2.forEach(item => {
+//       item.split('').forEach((char, index) => {
+//         if (index === 0) {
+//           remember = char
+//         } else if (index === 27) {
+//           part2 += char + remember
+//           remember = ''
+//         } else {
+//           part2 += char
+//         }
+//       })
+//     })
+//     permuteKeyMatrixPC2.forEach(item => {
+//       ret += part2[item - 1]
+//     })
+//   } else {
+//     permuteKeyMatrixPC2.forEach(item => {
+//       ret += part1[item - 1]
+//     })
+//   }
+//   return ret
+// }
 
 const fFunction = (r, k, s = [], e = '', xored = '', sboxed = '', row = '', col = '', ret = '') => {
   fFunctionExpanseMatrix.forEach(item => {
     e += r[item - 1]
   })
-  k = k.substring(0, 48)
   xored = xor(e, k)
   s = xored.match(/.{6}?/g)
   s.forEach((item, index) => {
@@ -335,35 +344,33 @@ f.addEventListener('submit', (e) => {
       binString += sub
     }
   }
-  // 
-  let L, R, permutedKey, f, output;
-  let meziPocet = 0;
+  permuteKey(binKeyString)
+  let L, R, f, output
+  let meziPocet = 0
   for (let i = 0; i < 16; i++) {
     if (i === 0) { // prvni permutace zpravy, klice a prohozeni stran zpravy
       [L, R] = initPermutation(binString) // L0, R0
       console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
       meziPocet++
-      L = R; // L1
-      permutedKey = initPermuteKey(binKeyString)
-      f = fFunction(R, permutedKey)
+      f = fFunction(R, keys[i])
       R = xor(L, f) // R1
+      L = R; // L1
       console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
       meziPocet++
     }
     if (i > 0 && i < 15) {
-      L = R; // L2,...,L15
-      permutedKey = permuteKey(i, permutedKey)
-      f = fFunction(R, permutedKey)
+      f = fFunction(R, keys[i])
       R = xor(L, f) // R2,...,R15
+      L = R; // L2,...,L15
       console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
       meziPocet++
     }
-    if (i === 15) { // posledni permutace zpravy, bez prohazovani stran
-      L = R; // L16
-      permutedKey = permuteKey(i, permutedKey)
-      f = fFunction(R, permutedKey)
+    if (i === 15) { // posledni permutace zpravy
+      f = fFunction(R, keys[i])
       R = xor(L, f) // R16
-      output = finalPermutation(`${R}${L}`)
+      console.log(`${L}${R}`)
+      console.log(finalPermutation(`${L}${R}`))
+      output = finalPermutation(`${L}${R}`)
     }
   }
   console.log('85e813540f0ab405')
