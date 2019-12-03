@@ -185,6 +185,7 @@ const finalPermutation = (m, ret = '') => {
 }
 
 const permuteKey = async (key, permutePC1 = '', halfPart1 = [], halfPart2 = [], remember = '') => {
+  let neco = '';
   // permuted choice 1
   permuteKeyMatrixPC1.forEach(item => {
     permutePC1 += key[item - 1]
@@ -230,48 +231,10 @@ const permuteKey = async (key, permutePC1 = '', halfPart1 = [], halfPart2 = [], 
         ret += part1[item - 1]
       })
     }
+    //console.log((i + 1), 'posun: ' + keyShifts[i], 'CD: ' + permutePC1, 'permutace: ' + ret)
     keys.push(ret)
   }
 }
-
-// const permuteKey = (iteration, key , halfPart1 = [], halfPart2 = [], part1 = '', part2 = '', remember = '', ret = '') => {
-//   halfPart1 = key.match(/.{28}?/g)
-//   halfPart1.forEach(item => {
-//     item.split('').forEach((char, index) => {
-//       if (index === 0) {
-//         remember = char
-//       } else if (index === 27) {
-//         part1 += char + remember
-//         remember = ''
-//       } else {
-//         part1 += char
-//       }
-//     })
-//   })
-//   if (keyShifts[iteration] > 1) {
-//     halfPart2 = part1.match(/.{28}?/g)
-//     halfPart2.forEach(item => {
-//       item.split('').forEach((char, index) => {
-//         if (index === 0) {
-//           remember = char
-//         } else if (index === 27) {
-//           part2 += char + remember
-//           remember = ''
-//         } else {
-//           part2 += char
-//         }
-//       })
-//     })
-//     permuteKeyMatrixPC2.forEach(item => {
-//       ret += part2[item - 1]
-//     })
-//   } else {
-//     permuteKeyMatrixPC2.forEach(item => {
-//       ret += part1[item - 1]
-//     })
-//   }
-//   return ret
-// }
 
 const fFunction = (r, k, s = [], e = '', xored = '', sboxed = '', row = '', col = '', ret = '') => {
   fFunctionExpanseMatrix.forEach(item => {
@@ -345,84 +308,41 @@ f.addEventListener('submit', (e) => {
     }
   }
   permuteKey(binKeyString)
-  let L, R, f, output
+  let L, R, oldL, oldR, f, output
   let meziPocet = 0
   for (let i = 0; i < 16; i++) {
     if (i === 0) { // prvni permutace zpravy, klice a prohozeni stran zpravy
-      [L, R] = initPermutation(binString) // L0, R0
-      console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+      [oldL, oldR] = initPermutation(binString) // L0, R0
+      console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
       meziPocet++
-      f = fFunction(R, keys[i])
-      R = xor(L, f) // R1
-      L = R; // L1
+      f = fFunction(oldR, keys[i])
+      R = xor(oldL, f) // R1
+      L = oldR // L1
       console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
       meziPocet++
     }
     if (i > 0 && i < 15) {
+      oldR = R // R1...
       f = fFunction(R, keys[i])
       R = xor(L, f) // R2,...,R15
-      L = R; // L2,...,L15
+      L = oldR // L2,...,L15
       console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
       meziPocet++
+      if (i === 14) oldR = R // tady si to musis kvuli nepretaceni pamatovat
     }
     if (i === 15) { // posledni permutace zpravy
       f = fFunction(R, keys[i])
       R = xor(L, f) // R16
-      console.log(`${L}${R}`)
-      console.log(finalPermutation(`${L}${R}`))
-      output = finalPermutation(`${L}${R}`)
+      L = oldR
+      console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+      // console.log(finalPermutation(`${L}${R}`))
+      output = finalPermutation(`${R}${L}`)
     }
   }
   console.log('85e813540f0ab405')
   console.log(bin2hex(output))
-  // separate message
-  // let [ L, R ] = initPermutation(binString)
-  // console.log('L0: ' + L)
-  // console.log('R0: ' + R)
-  // let permutedKey = permuteKey(binKeyString)
-  // let f = fFunction(R, permutedKey)
-  // let xored = xor(L, f)
-  // console.log(xored)
 
-  // console.log(`hexString: ` + hexString)
-  // let binString = '', binKeyString = ''
-  // let binar = ''
-  // hexString.split(' ').forEach(item => {
-  //   if (item !== '') {
-  //     binString += hex2bin(item) + ' '
-  //     binar += hex2bin(item)
-  //   }
-  // })
-  // hexKey.split(' ').forEach(item => {
-  //   if (item !== '') binKeyString += hex2bin(item) + ' '
-  // })
-  // console.log(`binString: ` + binString)
-
-  // binString.split(' ').forEach(item => {
-  //   if (item !== '') console.log(`bincode:` + item, `hexcode: ` + bin2hex(item), `string: ` + hex2string(bin2hex(item)))
-  // })
-  // let multiply = (64 - binar.length)/8
-  // const space = '00100000';
-  // for (let i = 0; i < multiply; i++) {
-  //   binar += space;
-  // }
-  //let binarySegments
   hex.innerHTML = `hexadecimalni: ${hexString}`
   bin.innerHTML = `binarni: ${binString}`
   binKey.innerHTML = `binarni klic: ${binKeyString}`
 })
-
-
-// let str = 'ahoj sabino :)'
-// let hexStr = '61 68 6f 6a 20 73 61 62 69 6e 6f 20 3a 29';
-// console.log(string2hex(str))
-// console.log(hex2string(string2hex(str)))
-// console.log(hex2bin(string2hex(str)))
-
-// let result = ''
-
-// hexStr.split(' ').forEach(item => {
-//   result += hex2bin(item);
-// })
-
-// console.log(bin2chunks(result))
