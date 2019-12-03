@@ -113,16 +113,13 @@ const permuteKeyMatrixPC2 = [
   44, 49, 39, 56, 34, 53,
   46, 42, 50, 36, 29, 32
 ]
-
 const keyShifts = {
   0:1, 1:1,  2:2,  3:2,  4:2,  5:2,  6:2,  7:2,
   8:1, 9:2, 10:2, 11:2, 12:2, 13:2, 14:2, 15:1
 }
-
 let keys = []
-let deKeys = []
 
-// HEXADECIMAL functions
+// HEX functions
 const string2hex = (str, ret = '') => { // correct
   str.split('').forEach((item, index) => {
     ret += str.charCodeAt(index).toString(16)
@@ -137,19 +134,19 @@ const hex2string = (str, hex, ret = '') => { // correct
   return ret
 }
 
-// BINARY functions
+// BIN functions
 const hex2bin = (str, ret = '') => { // correct
   str.split('').forEach(item => {
     ret += parseInt(item, 16).toString(2).padStart(4, '0')
   })
-  return ret;
+  return ret
 }
 const bin2hex = (str, quad, ret = '') => { // correct
   quad = str.match(/.{1,4}/g) || []
   quad.forEach(item => {
     ret += parseInt(item, 2).toString(16)
   })
-  return ret;
+  return ret
 }
 const bin2dec = str => { // correct
   return parseInt(str, 2)
@@ -167,9 +164,10 @@ const xor = (a, b, item2, ret = '') => {
     if ((!item && item2) || (item && !item2)) ret += 1
     else ret += 0
   })
-  return ret;
+  return ret
 }
 
+// init permutation and depermutation
 const initPermutation = (m, ret = []) => {
   initPermutationMatrix.forEach(item => {
     ret += m[item - 1]
@@ -177,31 +175,39 @@ const initPermutation = (m, ret = []) => {
   ret = ret.match(/.{32}?/g)
   return ret
 }
-
-const initDepermutation = (m, ret = []) => {
-  initPermutationMatrix.slice().reverse().forEach(item => {
-    ret += m[item - 1]
+const initDepermutation = (m, ret = [], ffs = '', r = '') => {
+  initPermutationMatrix.forEach((item, index) => {
+    ffs = String(item).padStart(2, '0')
+    ret.push([ffs, m[index]])
   })
-  ret = ret.match(/.{32}?/g) // TODO
-  return ret
+  ret.sort().forEach(item => {
+    r += item[1]
+  })
+  return r
 }
 
+// final permutation and depermutation
 const finalPermutation = (m, ret = '') => {
   finalPermutationMatrix.forEach(item => {
     ret += m[item - 1]
   })
   return ret
 }
-
-const finalDepermutation = (m, ret = '') => {
-  finalPermutationMatrix.slice().reverse().forEach(item => {
-    ret += m[item - 1]
+const finalDepermutation = (m, ret = [], ffs = '', r = []) => {
+  finalPermutationMatrix.forEach((item, index) => {
+    ffs = String(item).padStart(2, '0')
+    ret.push([ffs, m[index]])
   })
-  return ret
+  ret.sort().forEach(item => {
+    r += item[1]
+  })
+  r = r.match(/.{32}?/g)
+  return r
 }
 
+// key permutation
 const permuteKey = async (key, permutePC1 = '', halfPart1 = [], halfPart2 = [], remember = '') => {
-  let neco = '';
+  keys = [] // reset keys
   // permuted choice 1
   permuteKeyMatrixPC1.forEach(item => {
     permutePC1 += key[item - 1]
@@ -238,72 +244,22 @@ const permuteKey = async (key, permutePC1 = '', halfPart1 = [], halfPart2 = [], 
         })
       })
       permutePC1 = part2
+      // permuted choice 2
       permuteKeyMatrixPC2.forEach(item => {
         ret += part2[item - 1]
       })
     } else {
       permutePC1 = part1
+      // permuted choice 2
       permuteKeyMatrixPC2.forEach(item => {
         ret += part1[item - 1]
       })
     }
-    //console.log((i + 1), 'posun: ' + keyShifts[i], 'CD: ' + permutePC1, 'permutace: ' + ret)
     keys.push(ret)
   }
 }
 
-const dePermuteKey = async (key, permutePC2 = '', halfPart1 = [], halfPart2 = [], remember = '') => {
-  let neco = '';
-  // permuted choice 1
-  permuteKeyMatrixPC2.slice().reverse().forEach(item => {
-    permutePC2 += key[item - 1]
-  })
-  // 16 left shifts
-  for (let i = 16; i > 0; i--) {
-    let ret = '', part1 = '', part2 = ''
-    halfPart1 = permutePC2.match(/.{28}?/g)
-    permutePC2 = ''
-    halfPart1.forEach(item => {
-      item.split('').forEach((char, index) => {
-        if (index === 0) {
-          remember = char
-        } else if (index === 27) {
-          part1 += char + remember
-          remember = ''
-        } else {
-          part1 += char
-        }
-      })
-    })
-    if (keyShifts[i] > 1) {
-      halfPart2 = part1.match(/.{28}?/g)
-      halfPart2.forEach(item => {
-        item.split('').forEach((char, index) => {
-          if (index === 0) {
-            remember = char
-          } else if (index === 27) {
-            part2 += char + remember
-            remember = ''
-          } else {
-            part2 += char
-          }
-        })
-      })
-      permutePC2 = part2
-      permuteKeyMatrixPC1.slice().reverse().forEach(item => {
-        ret += part2[item - 1]
-      })
-    } else {
-      permutePC2 = part1
-      permuteKeyMatrixPC1.slice().reverse().forEach(item => {
-        ret += part1[item - 1]
-      })
-    }
-    //console.log((i + 1), 'posun: ' + keyShifts[i], 'CD: ' + permutePC1, 'permutace: ' + ret)
-    deKeys.push(ret)
-  }
-}
-
+// function F
 const fFunction = (r, k, s = [], e = '', xored = '', sboxed = '', row = '', col = '', ret = '') => {
   fFunctionExpanseMatrix.forEach(item => {
     e += r[item - 1]
@@ -316,7 +272,7 @@ const fFunction = (r, k, s = [], e = '', xored = '', sboxed = '', row = '', col 
     switch (index) {
       case 0:
         sboxed += dec2bin(boxS1[row][col]).padStart(4, '0')
-        break;
+        break
       case 1:
         sboxed += dec2bin(boxS2[row][col]).padStart(4, '0')
         break
@@ -350,86 +306,118 @@ const fFunction = (r, k, s = [], e = '', xored = '', sboxed = '', row = '', col 
 const sc = document.getElementById('encrypt')
 const tc = document.getElementById('Tc')
 const kc =  document.getElementById('Kc')
+const em = document.getElementById('encrypted-message')
 
 // decrypt form
 const sd = document.getElementById('decrypt')
 const td = document.getElementById('Td')
 const kd =  document.getElementById('Kd')
-
-const hex = document.getElementById('hex')
-const bin = document.getElementById('bin')
-const binKey = document.getElementById('bin-key')
+const dm = document.getElementById('decrypted-message')
 
 sc.addEventListener('submit', (e) => {
-  e.preventDefault();
-  // HEX convertion
-  // let hexString = string2hex(tc.value)
-  // let hexKeyString = string2hex(kc.value)
-  // console.log(string2hex('0123456789ABCDEF'))
-  // console.log(hex2bin('0123456789ABCDEF'))
-  let hexString = '0123456789ABCDEF'
-  let hexKeyString = '133457799BBCDFF1'
-  // BIN convertion
-  let binString = hex2bin(hexString)
-  let binKeyString = hex2bin(hexKeyString)
-  // empty spaces
-  let x = (64 - binString.length) / 8
-  let sub = '01011111'
-  if (x > 0) {
-    for (let i = 0; i < x; i++) {
-      binString += sub
+  e.preventDefault()
+  if (tc.value && kc.value) {
+    // HEX convertion
+    let hexString = string2hex(tc.value)
+    let hexKeyString = string2hex(kc.value)
+    // let hexString = '0123456789ABCDEF'
+    // let hexKeyString = '133457799BBCDFF1'
+    // BIN convertion
+    let binString = hex2bin(hexString)
+    let binKeyString = hex2bin(hexKeyString)
+    // empty spaces
+    let x = (64 - binString.length) / 8
+    let sub = '01011111'
+    if (x > 0) {
+      for (let i = 0; i < x; i++) {
+        binString += sub
+      }
     }
+    permuteKey(binKeyString)
+    let L, R, oldL, oldR, f, output
+    let meziPocet = 0
+    for (let i = 0; i < 16; i++) {
+      if (i === 0) { // prvni permutace zpravy, klice a prohozeni stran zpravy
+        [oldL, oldR] = initPermutation(binString) // L0, R0
+        console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
+        meziPocet++
+        f = fFunction(oldR, keys[i])
+        R = xor(oldL, f) // R1
+        L = oldR // L1
+        console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+        meziPocet++
+      }
+      if (i > 0 && i < 15) {
+        oldR = R // R1...
+        f = fFunction(R, keys[i])
+        R = xor(L, f) // R2,...,R15
+        L = oldR // L2,...,L15
+        console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+        meziPocet++
+        if (i === 14) oldR = R
+      }
+      if (i === 15) { // posledni permutace zpravy
+        f = fFunction(R, keys[i])
+        R = xor(L, f) // R16
+        L = oldR
+        console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+        output = finalPermutation(`${R}${L}`)
+      }
+    }
+    em.innerHTML = 'Zašifrovaná zpráva: ' + bin2hex(finalPermutation(`${R}${L}`));
+  // console.log('85e813540f0ab405')
+  // console.log(bin2hex(output))
   }
-  permuteKey(binKeyString)
-  let L, R, oldL, oldR, f, output
-  let meziPocet = 0
-  for (let i = 0; i < 16; i++) {
-    if (i === 0) { // prvni permutace zpravy, klice a prohozeni stran zpravy
-      [oldL, oldR] = initPermutation(binString) // L0, R0
-      console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
-      meziPocet++
-      f = fFunction(oldR, keys[i])
-      R = xor(oldL, f) // R1
-      L = oldR // L1
-      console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
-      meziPocet++
-    }
-    if (i > 0 && i < 15) {
-      oldR = R // R1...
-      f = fFunction(R, keys[i])
-      R = xor(L, f) // R2,...,R15
-      L = oldR // L2,...,L15
-      console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
-      meziPocet++
-      if (i === 14) oldR = R // tady si to musis kvuli nepretaceni pamatovat
-    }
-    if (i === 15) { // posledni permutace zpravy
-      f = fFunction(R, keys[i])
-      R = xor(L, f) // R16
-      L = oldR
-      console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
-      // console.log(finalPermutation(`${L}${R}`))
-      output = finalPermutation(`${R}${L}`)
-    }
-  }
-  console.log('85e813540f0ab405')
-  console.log(bin2hex(output))
-
-  // hex.innerHTML = `hexadecimalni: ${hexString}`
-  // bin.innerHTML = `binarni: ${binString}`
-  // binKey.innerHTML = `binarni klic: ${binKeyString}`
 })
-
+//71f2b9993091db96
+//AFCC1256
+//asd
 sd.addEventListener('submit', (e) => {
   e.preventDefault();
-  // let hexMessage = hex2bin(td.value)
-  // let hexKeyStr = hex2bin(kd.value)
-  let hexMessage = '85e813540f0ab405'
-  let hexKeyString = '133457799BBCDFF1'
-  let binMessage = hex2bin(hexMessage)
-  let binKeyString = hex2bin(hexKeyString)
-
-  dePermuteKey(binKeyString)
-
-  console.log('0123456789ABCDEF')
+  if (td.value && kd.value) {
+    // HEX
+    // let hexMessage = hex2bin(td.value)
+    // let hexKeyString = hex2bin(kd.value)
+    // let hexMessage = '85e813540f0ab405'
+    // let hexKeyString = '133457799BBCDFF1'
+    // BIN
+    let binMessage = hex2bin(td.value)
+    let binKeyString = hex2bin(kd.value)
+    // console.log('zprava v bin: ', binMessage)
+    permuteKey(binKeyString)
+    let L, R, oldL, oldR, f, output
+    let meziPocet = 16
+    for (let i = 15; i > -1; i--) {
+      if (i === 15) {
+        [R, L] = finalDepermutation(binMessage) // L16, R16
+        console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+        meziPocet--
+        oldR = L // R15
+        f = fFunction(oldR, keys[i])
+        oldL = xor(oldR, f) // L15
+        R = oldR
+        console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
+        meziPocet--
+      }
+      if (i > 0 && i < 15) {
+        oldR = oldL // R14...
+        f = fFunction(oldR, keys[i])
+        oldL = xor(R, f) // L14...
+        R = oldR
+        console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
+        meziPocet--
+      }
+      if (i === 0) {
+        oldR = oldL
+        f = fFunction(oldR, keys[i])
+        oldL = xor(R, f)
+        console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
+        // console.log(initDepermutation(`${oldL}${oldR}`))
+        // console.log(bin2hex(initDepermutation(`${oldL}${oldR}`)))
+        // console.log(hex2string(bin2hex(initDepermutation(`${oldL}${oldR}`))))
+        dm.innerHTML = 'Dešifrovaná zpráva: ' + hex2string(bin2hex(initDepermutation(`${oldL}${oldR}`)));
+      }
+    }
+  // console.log('0123456789ABCDEF')
+  }
 })

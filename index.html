@@ -1,30 +1,98 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>DES</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    fieldset {
+      border: 1px solid #ced4da;
+      padding: 0px 15px 15px 15px;
+    }
+    legend {
+      color: #dc3545;
+      padding: 0px 5px;
+      width: auto !important;
+    }
+    input:focus {
+      box-shadow: none !important;
+      border: 1px solid #dc3545 !important;
+    }
+    h3, .copy {
+      color: #dc3545;
+    }
+    .copyright {
+      color: #333;
+      font-size: 0.8rem;
+    }
+  </style>
 </head>
 <body>
-  <form id="encrypt">
-    <label for="Tc">Zpráva k zašifrování:</label>
-    <input type="text" id="Tc" value="" maxlength="8">
-    <label for="Kc">Šifrovací klíč:</label>
-    <input type="text" id="Kc" value="" maxlength="8">
-    <button type="submit">Zašifrovat zprávu</button>
-  </form>
-  <form id="decrypt">
-    <label for="Td">Zpráva k dešifrování:</label>
-    <input type="text" id="Td" value="" maxlength="8">
-    <label for="Kd">Šifrovací klíč:</label>
-    <input type="text" id="Kd" value="" maxlength="8">
-    <button type="submit">Dešifrovat zprávu</button>
-  </form>
+  <div class="container pt-5">
+
+    <div class="row">
+      <div class="col-12 text-center">
+        <img src="gear.svg" width="50" height="50" title="Gear" />
+        <h3> Data Encryption Standard</h3>
+      </div>
+    </div>
+
+    <fieldset class="mt-1">
+      <legend>Encrypt</legend>
+      <form class="row" id="encrypt">
+        <div class="form-group col-6">
+          <label for="Tc">Zpráva k zašifrování:</label>
+          <input class="form-control" type="text" id="Tc" value="asd" maxlength="8" />
+        </div>
+        <div class="form-group col-6">
+          <label for="Kc">Šifrovací klíč:</label>
+          <input class="form-control" type="text" id="Kc" value="AFCC1256" maxlength="8" placeholder="hexadecimální hodnota klíče" />
+        </div>
+        <div class="col-12 text-center">
+          <button type="submit" class="btn btn-danger"><img src="lock.svg" width="25" height="25" title="Encrypt" /> Zašifrovat zprávu</button>
+        </div>
+        <div id="encrypted-message" class="col-12 text-center mt-3">
+
+        </div>
+      </form>
+    </fieldset>
+
+    <fieldset class="mt-4">
+      <legend>Decrypt</legend>
+      <form class="row" id="decrypt">
+        <div class="form-group col-6">
+          <label for="Td">Zpráva k dešifrování:</label>
+          <input class="form-control" type="text" id="Td" value="71f2b9993091db96" maxlength="16" />
+        </div>
+        <div class="form-group col-6">
+          <label for="Kd">Šifrovací klíč:</label>
+          <input class="form-control" type="text" id="Kd" value="AFCC1256" maxlength="8" placeholder="hexadecimální hodnota klíče" />
+        </div>
+        <div class="col-12 text-center">
+          <button type="submit" class="btn btn-danger"><img src="unlock.svg" width="25" height="25" title="Decrypt" />Dešifrovat zprávu</button>
+        </div>
+        <div id="decrypted-message" class="col-12 text-center mt-3">
+        
+        </div>
+      </form>
+    </fieldset>
+
+    <div class="row mt-3">
+      <div class="col-12 text-center">
+        <p class="copyright"><span class="copy">&copy;</span> 2019, Dominik Bláha</p>
+      </div>
+    </div>
+
+  </div>
+
   <label id="hex" style="display: block;"></label>
   <label id="bin" style="display: block;"></label>
   <label id="cutted" style="display: block;"></label>
   <label id="bin-key" style="display: block;"></label>
-  <script src="index.js"></script>
+
+  <script src="script.js"></script>
 </body>
 </html>
