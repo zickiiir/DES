@@ -120,6 +120,7 @@ const keyShifts = {
 }
 
 let keys = []
+let deKeys = []
 
 // HEXADECIMAL functions
 const string2hex = (str, ret = '') => { // correct
@@ -177,8 +178,23 @@ const initPermutation = (m, ret = []) => {
   return ret
 }
 
+const initDepermutation = (m, ret = []) => {
+  initPermutationMatrix.slice().reverse().forEach(item => {
+    ret += m[item - 1]
+  })
+  ret = ret.match(/.{32}?/g) // TODO
+  return ret
+}
+
 const finalPermutation = (m, ret = '') => {
   finalPermutationMatrix.forEach(item => {
+    ret += m[item - 1]
+  })
+  return ret
+}
+
+const finalDepermutation = (m, ret = '') => {
+  finalPermutationMatrix.slice().reverse().forEach(item => {
     ret += m[item - 1]
   })
   return ret
@@ -236,6 +252,58 @@ const permuteKey = async (key, permutePC1 = '', halfPart1 = [], halfPart2 = [], 
   }
 }
 
+const dePermuteKey = async (key, permutePC2 = '', halfPart1 = [], halfPart2 = [], remember = '') => {
+  let neco = '';
+  // permuted choice 1
+  permuteKeyMatrixPC2.slice().reverse().forEach(item => {
+    permutePC2 += key[item - 1]
+  })
+  // 16 left shifts
+  for (let i = 16; i > 0; i--) {
+    let ret = '', part1 = '', part2 = ''
+    halfPart1 = permutePC2.match(/.{28}?/g)
+    permutePC2 = ''
+    halfPart1.forEach(item => {
+      item.split('').forEach((char, index) => {
+        if (index === 0) {
+          remember = char
+        } else if (index === 27) {
+          part1 += char + remember
+          remember = ''
+        } else {
+          part1 += char
+        }
+      })
+    })
+    if (keyShifts[i] > 1) {
+      halfPart2 = part1.match(/.{28}?/g)
+      halfPart2.forEach(item => {
+        item.split('').forEach((char, index) => {
+          if (index === 0) {
+            remember = char
+          } else if (index === 27) {
+            part2 += char + remember
+            remember = ''
+          } else {
+            part2 += char
+          }
+        })
+      })
+      permutePC2 = part2
+      permuteKeyMatrixPC1.slice().reverse().forEach(item => {
+        ret += part2[item - 1]
+      })
+    } else {
+      permutePC2 = part1
+      permuteKeyMatrixPC1.slice().reverse().forEach(item => {
+        ret += part1[item - 1]
+      })
+    }
+    //console.log((i + 1), 'posun: ' + keyShifts[i], 'CD: ' + permutePC1, 'permutace: ' + ret)
+    deKeys.push(ret)
+  }
+}
+
 const fFunction = (r, k, s = [], e = '', xored = '', sboxed = '', row = '', col = '', ret = '') => {
   fFunctionExpanseMatrix.forEach(item => {
     e += r[item - 1]
@@ -278,22 +346,27 @@ const fFunction = (r, k, s = [], e = '', xored = '', sboxed = '', row = '', col 
   return ret
 }
 
-// message T, key K
-const f = document.getElementById('convert')
-const t = document.getElementById('T')
-const k =  document.getElementById('K')
+// encrypt form
+const sc = document.getElementById('encrypt')
+const tc = document.getElementById('Tc')
+const kc =  document.getElementById('Kc')
+
+// decrypt form
+const sd = document.getElementById('decrypt')
+const td = document.getElementById('Td')
+const kd =  document.getElementById('Kd')
 
 const hex = document.getElementById('hex')
 const bin = document.getElementById('bin')
 const binKey = document.getElementById('bin-key')
 
-f.addEventListener('submit', (e) => {
+sc.addEventListener('submit', (e) => {
   e.preventDefault();
   // HEX convertion
-  //let hexString = string2hex(t.value)
+  // let hexString = string2hex(tc.value)
+  // let hexKeyString = string2hex(kc.value)
   // console.log(string2hex('0123456789ABCDEF'))
   // console.log(hex2bin('0123456789ABCDEF'))
-  //let hexKeyString = string2hex(k.value)
   let hexString = '0123456789ABCDEF'
   let hexKeyString = '133457799BBCDFF1'
   // BIN convertion
@@ -342,7 +415,21 @@ f.addEventListener('submit', (e) => {
   console.log('85e813540f0ab405')
   console.log(bin2hex(output))
 
-  hex.innerHTML = `hexadecimalni: ${hexString}`
-  bin.innerHTML = `binarni: ${binString}`
-  binKey.innerHTML = `binarni klic: ${binKeyString}`
+  // hex.innerHTML = `hexadecimalni: ${hexString}`
+  // bin.innerHTML = `binarni: ${binString}`
+  // binKey.innerHTML = `binarni klic: ${binKeyString}`
+})
+
+sd.addEventListener('submit', (e) => {
+  e.preventDefault();
+  // let hexMessage = hex2bin(td.value)
+  // let hexKeyStr = hex2bin(kd.value)
+  let hexMessage = '85e813540f0ab405'
+  let hexKeyString = '133457799BBCDFF1'
+  let binMessage = hex2bin(hexMessage)
+  let binKeyString = hex2bin(hexKeyString)
+
+  dePermuteKey(binKeyString)
+
+  console.log('0123456789ABCDEF')
 })

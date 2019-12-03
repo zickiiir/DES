@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="cs">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +7,19 @@
   <title>Document</title>
 </head>
 <body>
-  <form id="convert">
-    <input type="text" id="T" value="ad" maxlength="8">
-    <input type="text" id="K" value="asdfghjk" maxlength="8">
-    <!-- 133457799BBCDFF1 -->
-    <button type="submit">convert</button>
+  <form id="encrypt">
+    <label for="Tc">Zpráva k zašifrování:</label>
+    <input type="text" id="Tc" value="" maxlength="8">
+    <label for="Kc">Šifrovací klíč:</label>
+    <input type="text" id="Kc" value="" maxlength="8">
+    <button type="submit">Zašifrovat zprávu</button>
+  </form>
+  <form id="decrypt">
+    <label for="Td">Zpráva k dešifrování:</label>
+    <input type="text" id="Td" value="" maxlength="8">
+    <label for="Kd">Šifrovací klíč:</label>
+    <input type="text" id="Kd" value="" maxlength="8">
+    <button type="submit">Dešifrovat zprávu</button>
   </form>
   <label id="hex" style="display: block;"></label>
   <label id="bin" style="display: block;"></label>
