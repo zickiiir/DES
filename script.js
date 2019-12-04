@@ -364,7 +364,8 @@ sc.addEventListener('submit', (e) => {
         output = finalPermutation(`${R}${L}`)
       }
     }
-    em.innerHTML = 'Zašifrovaná zpráva: ' + bin2hex(finalPermutation(`${R}${L}`));
+    em.innerHTML = 'Zašifrovaná zpráva: ' + bin2hex(finalPermutation(`${R}${L}`))
+    console.log('--------------------------------------------------------------')
   // console.log('85e813540f0ab405')
   // console.log(bin2hex(output))
   }
@@ -385,22 +386,27 @@ sd.addEventListener('submit', (e) => {
     let binKeyString = hex2bin(kd.value)
     // console.log('zprava v bin: ', binMessage)
     permuteKey(binKeyString)
-    let L, R, oldL, oldR, f, output
+    let L, R, oldL, oldR, f
     let meziPocet = 16
     for (let i = 15; i > -1; i--) {
       if (i === 15) {
         [R, L] = finalDepermutation(binMessage) // L16, R16
         console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
         meziPocet--
-        oldR = L // R15
-        f = fFunction(oldR, keys[i])
-        oldL = xor(oldR, f) // L15
-        R = oldR
-        console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
-        meziPocet--
+        // oldR = L
+        // f = fFunction(R, keys[i])
+        // R = xor(L, f)
+        // oldL = R
+        // // oldR = L // R15
+        // // f = fFunction(L, keys[i])
+        // // oldL = xor(L, f) // L15
+        // // R = oldR
+        // console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
+        // meziPocet--
       }
       if (i > 0 && i < 15) {
-        oldR = oldL // R14...
+        if (i === 14) oldR = L
+        else oldR = oldL // R14...
         f = fFunction(oldR, keys[i])
         oldL = xor(R, f) // L14...
         R = oldR
