@@ -386,12 +386,12 @@ sd.addEventListener('submit', (e) => {
     let binKeyString = hex2bin(kd.value)
     // console.log('zprava v bin: ', binMessage)
     permuteKey(binKeyString)
-    let L, R, oldL, oldR, f
+    let L, R, oldL, oldR, f, R15
     let meziPocet = 16
     for (let i = 15; i > -1; i--) {
       if (i === 15) {
-        [R, L] = finalDepermutation(binMessage) // L16, R16
-        console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+        [R, R15] = finalDepermutation(binMessage) // R15 = L16, R16
+        console.log(`L${meziPocet}: `, R15, `R${meziPocet}: `, R)
         meziPocet--
         // oldR = L
         // f = fFunction(R, keys[i])
@@ -405,13 +405,18 @@ sd.addEventListener('submit', (e) => {
         // meziPocet--
       }
       if (i > 0 && i < 15) {
-        if (i === 14) oldR = L
-        else oldR = oldL // R14...
-        f = fFunction(oldR, keys[i])
-        oldL = xor(R, f) // L14...
-        R = oldR
-        console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
-        meziPocet--
+        if (i === 14) {
+          console.log(keys)
+          f = fFunction(R, keys[i + 1])
+          L = xor(R15, f)
+          console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R15)
+        }
+        // else oldR = oldL // R14...
+        // f = fFunction(oldR, keys[i])
+        // oldL = xor(R, f) // L14...
+        // R = oldR
+        // console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
+        // meziPocet--
       }
       if (i === 0) {
         oldR = oldL
