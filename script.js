@@ -317,23 +317,24 @@ const dm = document.getElementById('decrypted-message')
 let dcorrect = 0
 
 sc.addEventListener('submit', (e) => {
-  if (/^[A-Za-z0-9]+$/.test(tc.value)) {
-    ecorrect++
-    if (/^[A-Fa-f0-9]+$/.test(kc.value)) {
-      ecorrect++
-      if (kc.value.length === 16) {
-        ecorrect++
-      }
-    }
-  }
+  // if (/^[A-Za-z0-9]+$/.test(tc.value)) {
+  //   ecorrect++
+  //   if (/^[A-Fa-f0-9]+$/.test(kc.value)) {
+  //     ecorrect++
+  //     if (kc.value.length === 16) {
+  //       ecorrect++
+  //     }
+  //   }
+  // }
   e.preventDefault()
-  if (ecorrect == 3) {
+  if (tc.value && kc.value) {
     ecorrect = 0;
     // HEX convertion
     let hexString = string2hex(tc.value)
+    let hexKey = string2hex(kc.value)
     // BIN convertion
     let binString = hex2bin(hexString)
-    let binKeyString = hex2bin(kc.value)
+    let binKeyString = hex2bin(hexKey)
     // empty spaces
     let x = (64 - binString.length) / 8
     let sub = '01011111'
@@ -382,21 +383,23 @@ sc.addEventListener('submit', (e) => {
 })
 
 sd.addEventListener('submit', (e) => {
-  if (/^[A-Za-z0-9]+$/.test(td.value)) {
-    dcorrect++
-    if (/^[A-Fa-f0-9]+$/.test(kd.value)) {
-      dcorrect++
-      if (kd.value.length === 16) {
-        dcorrect++
-      }
-    }
-  }
+  // if (/^[A-Za-z0-9]+$/.test(td.value)) {
+  //   dcorrect++
+  //   if (/^[A-Fa-f0-9]+$/.test(kd.value)) {
+  //     dcorrect++
+  //     if (kd.value.length === 16) {
+  //       dcorrect++
+  //     }
+  //   }
+  // }
   e.preventDefault();
-  if (dcorrect == 3) {
+  if (td.value && kd.value) {
     dcorrect = 0;
+    // HEX
+    let hexKey = string2hex(kd.value)
     // BIN
     let binMessage = hex2bin(td.value)
-    let binKeyString = hex2bin(kd.value)
+    let binKeyString = hex2bin(hexKey)
     permuteKey(binKeyString)
     let L, R, oldL, oldR, f, R15
     let meziPocet = 16
