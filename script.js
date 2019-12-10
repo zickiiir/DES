@@ -376,6 +376,7 @@ sc.addEventListener('submit', (e) => {
     em.innerHTML = 'Zašifrovaná zpráva: ' + bin2hex(finalPermutation(`${R}${L}`))
     console.log('--------------------------------------------------------------')
   } else {
+    ecorrect = 0;
     em.innerHTML = 'Zkontrolujte vstupní hodnoty!'
   }
 })
@@ -429,6 +430,7 @@ sd.addEventListener('submit', (e) => {
       }
     }
   } else {
+    dcorrect = 0;
     dm.innerHTML = 'Zkontrolujte vstupní hodnoty!'
   }
 })
