@@ -48,7 +48,7 @@ const boxS8 = {
   3: [ 2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11 ]
 }
 
-// DES permutations matrixes
+// DES permutation matrixes
 const initPermutationMatrix = [
   58, 50, 42, 34, 26, 18, 10, 2,
   60, 52, 44, 36, 28, 20, 12, 4,
@@ -92,7 +92,7 @@ const fFunctionPermutationMatrix = [
   22, 11,  4, 25
 ]
 
-// KEY permutations matrixes
+// KEY permutation matrixes
 const permuteKeyMatrixPC1 = [ 
   57, 49, 41, 33, 25, 17, 9,
   1, 58, 50, 42, 34, 26, 18,
@@ -120,13 +120,13 @@ const keyShifts = {
 let keys = []
 
 // HEX functions
-const string2hex = (str, ret = '') => { // correct
+const string2hex = (str, ret = '') => {
   str.split('').forEach((item, index) => {
     ret += str.charCodeAt(index).toString(16)
   })
   return ret
 }
-const hex2string = (str, hex, ret = '') => { // correct
+const hex2string = (str, hex, ret = '') => {
   hex = str.match(/.{1,2}/g) || []
   hex.forEach(item => {
     ret += String.fromCharCode(parseInt(item, 16))
@@ -135,23 +135,23 @@ const hex2string = (str, hex, ret = '') => { // correct
 }
 
 // BIN functions
-const hex2bin = (str, ret = '') => { // correct
+const hex2bin = (str, ret = '') => {
   str.split('').forEach(item => {
     ret += parseInt(item, 16).toString(2).padStart(4, '0')
   })
   return ret
 }
-const bin2hex = (str, quad, ret = '') => { // correct
+const bin2hex = (str, quad, ret = '') => {
   quad = str.match(/.{1,4}/g) || []
   quad.forEach(item => {
     ret += parseInt(item, 2).toString(16)
   })
   return ret
 }
-const bin2dec = str => { // correct
+const bin2dec = str => {
   return parseInt(str, 2)
 }
-const dec2bin = str => { // correct
+const dec2bin = str => {
   return str.toString(2)
 }
 
@@ -205,7 +205,7 @@ const finalDepermutation = (m, ret = [], ffs = '', r = []) => {
   return r
 }
 
-// key permutation
+// KEY permutation
 const permuteKey = async (key, permutePC1 = '', halfPart1 = [], halfPart2 = [], remember = '') => {
   keys = [] // reset keys
   // permuted choice 1
@@ -307,24 +307,33 @@ const sc = document.getElementById('encrypt')
 const tc = document.getElementById('Tc')
 const kc =  document.getElementById('Kc')
 const em = document.getElementById('encrypted-message')
+let ecorrect = 0
 
 // decrypt form
 const sd = document.getElementById('decrypt')
 const td = document.getElementById('Td')
 const kd =  document.getElementById('Kd')
 const dm = document.getElementById('decrypted-message')
+let dcorrect = 0
 
 sc.addEventListener('submit', (e) => {
+  if (/^[A-Za-z0-9]+$/.test(tc.value)) {
+    ecorrect++
+    if (/^[A-Fa-f0-9]+$/.test(kc.value)) {
+      ecorrect++
+      if (kc.value.length === 16) {
+        ecorrect++
+      }
+    }
+  }
   e.preventDefault()
-  if (tc.value && kc.value) {
+  if (ecorrect == 3) {
+    ecorrect = 0;
     // HEX convertion
     let hexString = string2hex(tc.value)
-    let hexKeyString = string2hex(kc.value)
-    // let hexString = '0123456789ABCDEF'
-    // let hexKeyString = '133457799BBCDFF1'
     // BIN convertion
     let binString = hex2bin(hexString)
-    let binKeyString = hex2bin(hexKeyString)
+    let binKeyString = hex2bin(kc.value)
     // empty spaces
     let x = (64 - binString.length) / 8
     let sub = '01011111'
@@ -366,25 +375,27 @@ sc.addEventListener('submit', (e) => {
     }
     em.innerHTML = 'Zašifrovaná zpráva: ' + bin2hex(finalPermutation(`${R}${L}`))
     console.log('--------------------------------------------------------------')
-  // console.log('85e813540f0ab405')
-  // console.log(bin2hex(output))
+  } else {
+    em.innerHTML = 'Zkontrolujte vstupní hodnoty!'
   }
 })
-//71f2b9993091db96
-//AFCC1256
-//asd
+
 sd.addEventListener('submit', (e) => {
+  if (/^[A-Za-z0-9]+$/.test(td.value)) {
+    dcorrect++
+    if (/^[A-Fa-f0-9]+$/.test(kd.value)) {
+      dcorrect++
+      if (kd.value.length === 16) {
+        dcorrect++
+      }
+    }
+  }
   e.preventDefault();
-  if (td.value && kd.value) {
-    // HEX
-    // let hexMessage = hex2bin(td.value)
-    // let hexKeyString = hex2bin(kd.value)
-    // let hexMessage = '85e813540f0ab405'
-    // let hexKeyString = '133457799BBCDFF1'
+  if (dcorrect == 3) {
+    dcorrect = 0;
     // BIN
     let binMessage = hex2bin(td.value)
     let binKeyString = hex2bin(kd.value)
-    // console.log('zprava v bin: ', binMessage)
     permuteKey(binKeyString)
     let L, R, oldL, oldR, f, R15
     let meziPocet = 16
@@ -393,42 +404,31 @@ sd.addEventListener('submit', (e) => {
         [R, R15] = finalDepermutation(binMessage) // R15 = L16, R16
         console.log(`L${meziPocet}: `, R15, `R${meziPocet}: `, R)
         meziPocet--
-        // oldR = L
-        // f = fFunction(R, keys[i])
-        // R = xor(L, f)
-        // oldL = R
-        // // oldR = L // R15
-        // // f = fFunction(L, keys[i])
-        // // oldL = xor(L, f) // L15
-        // // R = oldR
-        // console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
-        // meziPocet--
       }
       if (i > 0 && i < 15) {
         if (i === 14) {
-          console.log(keys)
-          f = fFunction(R, keys[i + 1])
-          L = xor(R15, f)
-          console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R15)
+          f = fFunction(R15, keys[i + 1])
+          L = xor(R, f)
+          console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R15) // L15, R15
+          R = R15
+          meziPocet--
         }
-        // else oldR = oldL // R14...
-        // f = fFunction(oldR, keys[i])
-        // oldL = xor(R, f) // L14...
-        // R = oldR
-        // console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
-        // meziPocet--
+        oldR = L
+        f = fFunction(oldR, keys[i])
+        L = xor(R, f)
+        console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, oldR)
+        R = oldR
+        meziPocet--
       }
       if (i === 0) {
-        oldR = oldL
+        oldR = L
         f = fFunction(oldR, keys[i])
-        oldL = xor(R, f)
-        console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
-        // console.log(initDepermutation(`${oldL}${oldR}`))
-        // console.log(bin2hex(initDepermutation(`${oldL}${oldR}`)))
-        // console.log(hex2string(bin2hex(initDepermutation(`${oldL}${oldR}`))))
-        dm.innerHTML = 'Dešifrovaná zpráva: ' + hex2string(bin2hex(initDepermutation(`${oldL}${oldR}`)));
+        L = xor(R, f)
+        console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, oldR)
+        dm.innerHTML = 'Dešifrovaná zpráva: ' + hex2string(bin2hex(initDepermutation(`${L}${oldR}`)));
       }
     }
-  // console.log('0123456789ABCDEF')
+  } else {
+    dm.innerHTML = 'Zkontrolujte vstupní hodnoty!'
   }
 })
