@@ -307,133 +307,250 @@ const sc = document.getElementById('encrypt')
 const tc = document.getElementById('Tc')
 const kc =  document.getElementById('Kc')
 const em = document.getElementById('encrypted-message')
-let ecorrect = 0
 
 // decrypt form
 const sd = document.getElementById('decrypt')
 const td = document.getElementById('Td')
 const kd =  document.getElementById('Kd')
 const dm = document.getElementById('decrypted-message')
-let dcorrect = 0
 
 sc.addEventListener('submit', (e) => {
-  // if (/^[A-Za-z0-9]+$/.test(tc.value)) {
-  //   ecorrect++
-  //   if (/^[A-Fa-f0-9]+$/.test(kc.value)) {
-  //     ecorrect++
-  //     if (kc.value.length === 16) {
-  //       ecorrect++
-  //     }
-  //   }
-  // }
   e.preventDefault()
-  if (tc.value && kc.value) {
-    ecorrect = 0;
-    // HEX convertion
-    let hexString = string2hex(tc.value)
+  let ecorrect = 0
+  if (/^[A-Za-z0-9\s]+$/.test(tc.value)) { // vstupni hodnoty zpravy
+    ecorrect++
+    if (/^[A-Za-z0-9\s]+$/.test(kc.value)) { // vstupni hodnoty klice
+      ecorrect++
+      if (kc.value.length === 8) { // pocet znaku klice
+        ecorrect++
+      }
+    }
+  }
+  console.log(ecorrect)
+  if (ecorrect === 3) {
+    let output = ''
+    let blocks = []
+  
+    blocks = tc.value.match(/.{1,8}/g)
+  
     let hexKey = string2hex(kc.value)
-    // BIN convertion
-    let binString = hex2bin(hexString)
     let binKeyString = hex2bin(hexKey)
-    // empty spaces
-    let x = (64 - binString.length) / 8
-    let sub = '01011111'
-    if (x > 0) {
-      for (let i = 0; i < x; i++) {
-        binString += sub
-      }
-    }
     permuteKey(binKeyString)
-    let L, R, oldL, oldR, f, output
-    let meziPocet = 0
-    for (let i = 0; i < 16; i++) {
-      if (i === 0) { // prvni permutace zpravy, klice a prohozeni stran zpravy
-        [oldL, oldR] = initPermutation(binString) // L0, R0
-        console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
-        meziPocet++
-        f = fFunction(oldR, keys[i])
-        R = xor(oldL, f) // R1
-        L = oldR // L1
-        console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
-        meziPocet++
+  
+    blocks.forEach(item => {
+      let hexString = string2hex(item)
+      let binString = hex2bin(hexString)
+  
+      // empty spaces
+      let x = (64 - binString.length) / 8
+      let sub = '01011111'
+      if (x > 0) {
+        for (let i = 0; i < x; i++) {
+          binString += sub
+        }
+      }    
+  
+      let L, R, oldL, oldR, f
+      let meziPocet = 0
+  
+      for (let i = 0; i < 16; i++) {
+        if (i === 0) { // prvni permutace zpravy, klice a prohozeni stran zpravy
+          [oldL, oldR] = initPermutation(binString) // L0, R0
+          console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
+          meziPocet++
+          f = fFunction(oldR, keys[i])
+          R = xor(oldL, f) // R1
+          L = oldR // L1
+          console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+          meziPocet++
+        }
+        if (i > 0 && i < 15) {
+          oldR = R // R1...
+          f = fFunction(R, keys[i])
+          R = xor(L, f) // R2,...,R15
+          L = oldR // L2,...,L15
+          console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+          meziPocet++
+          if (i === 14) oldR = R
+        }
+        if (i === 15) { // posledni permutace zpravy
+          f = fFunction(R, keys[i])
+          R = xor(L, f) // R16
+          L = oldR
+          console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+          output += bin2hex(finalPermutation(`${R}${L}`))
+        }
       }
-      if (i > 0 && i < 15) {
-        oldR = R // R1...
-        f = fFunction(R, keys[i])
-        R = xor(L, f) // R2,...,R15
-        L = oldR // L2,...,L15
-        console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
-        meziPocet++
-        if (i === 14) oldR = R
-      }
-      if (i === 15) { // posledni permutace zpravy
-        f = fFunction(R, keys[i])
-        R = xor(L, f) // R16
-        L = oldR
-        console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
-        output = finalPermutation(`${R}${L}`)
-      }
-    }
-    em.innerHTML = 'Zašifrovaná zpráva: ' + bin2hex(finalPermutation(`${R}${L}`))
-    console.log('--------------------------------------------------------------')
+    }) 
+    em.innerHTML = 'Zašifrovaná zpráva: ' + output
   } else {
     ecorrect = 0;
     em.innerHTML = 'Zkontrolujte vstupní hodnoty!'
   }
+
+  // verze bez deleni na bloky
+  // if (ecorrect === 2) {
+  //   ecorrect = 0;
+  //   // HEX convertion
+  //   let hexString = string2hex(tc.value)
+  //   let hexKey = string2hex(kc.value)
+  //   // BIN convertion
+  //   let binString = hex2bin(hexString)
+  //   let binKeyString = hex2bin(hexKey)
+  //   // empty spaces
+  //   let x = (64 - binString.length) / 8
+  //   let sub = '01011111'
+  //   if (x > 0) {
+  //     for (let i = 0; i < x; i++) {
+  //       binString += sub
+  //     }
+  //   }
+  //   permuteKey(binKeyString)
+  //   let L, R, oldL, oldR, f
+  //   let meziPocet = 0
+  //   for (let i = 0; i < 16; i++) {
+  //     if (i === 0) { // prvni permutace zpravy, klice a prohozeni stran zpravy
+  //       [oldL, oldR] = initPermutation(binString) // L0, R0
+  //       console.log(`L${meziPocet}: `, oldL, `R${meziPocet}: `, oldR)
+  //       meziPocet++
+  //       f = fFunction(oldR, keys[i])
+  //       R = xor(oldL, f) // R1
+  //       L = oldR // L1
+  //       console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+  //       meziPocet++
+  //     }
+  //     if (i > 0 && i < 15) {
+  //       oldR = R // R1...
+  //       f = fFunction(R, keys[i])
+  //       R = xor(L, f) // R2,...,R15
+  //       L = oldR // L2,...,L15
+  //       console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+  //       meziPocet++
+  //       if (i === 14) oldR = R
+  //     }
+  //     if (i === 15) { // posledni permutace zpravy
+  //       f = fFunction(R, keys[i])
+  //       R = xor(L, f) // R16
+  //       L = oldR
+  //       console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R)
+  //       //output = finalPermutation(`${R}${L}`)
+  //     }
+  //   }
+  //   em.innerHTML = 'Zašifrovaná zpráva: ' + bin2hex(finalPermutation(`${R}${L}`))
+  //   console.log('--------------------------------------------------------------')
+  // } else {
+  //   ecorrect = 0;
+  //   em.innerHTML = 'Zkontrolujte vstupní hodnoty!'
+  // }
 })
 
 sd.addEventListener('submit', (e) => {
-  // if (/^[A-Za-z0-9]+$/.test(td.value)) {
-  //   dcorrect++
-  //   if (/^[A-Fa-f0-9]+$/.test(kd.value)) {
-  //     dcorrect++
-  //     if (kd.value.length === 16) {
-  //       dcorrect++
-  //     }
-  //   }
-  // }
   e.preventDefault();
-  if (td.value && kd.value) {
-    dcorrect = 0;
-    // HEX
-    let hexKey = string2hex(kd.value)
-    // BIN
-    let binMessage = hex2bin(td.value)
-    let binKeyString = hex2bin(hexKey)
-    permuteKey(binKeyString)
-    let L, R, oldL, oldR, f, R15
-    let meziPocet = 16
-    for (let i = 15; i > -1; i--) {
-      if (i === 15) {
-        [R, R15] = finalDepermutation(binMessage) // R15 = L16, R16
-        console.log(`L${meziPocet}: `, R15, `R${meziPocet}: `, R)
-        meziPocet--
-      }
-      if (i > 0 && i < 15) {
-        if (i === 14) {
-          f = fFunction(R15, keys[i + 1])
-          L = xor(R, f)
-          console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R15) // L15, R15
-          R = R15
-          meziPocet--
-        }
-        oldR = L
-        f = fFunction(oldR, keys[i])
-        L = xor(R, f)
-        console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, oldR)
-        R = oldR
-        meziPocet--
-      }
-      if (i === 0) {
-        oldR = L
-        f = fFunction(oldR, keys[i])
-        L = xor(R, f)
-        console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, oldR)
-        dm.innerHTML = 'Dešifrovaná zpráva: ' + hex2string(bin2hex(initDepermutation(`${L}${oldR}`)));
+  let dcorrect = 0
+  if (/^[A-Za-z0-9]+$/.test(kd.value)) { // vstupni hodnoty v klici
+    dcorrect++
+    if (/^[A-Fa-f0-9]+$/.test(td.value)) { // vstupni hodnoty ve zprave
+      dcorrect++
+      if (kd.value.length === 8) { // pocet znaku klice
+        dcorrect++
       }
     }
+  }
+  if (dcorrect === 3) {
+    dcorrect = 0
+
+    let output = ''
+    let blocks = []
+    let meziPocet = 16
+  
+    blocks = td.value.match(/.{16}/g)
+  
+    let hexKey = string2hex(kd.value)
+    let binKeyString = hex2bin(hexKey)
+    permuteKey(binKeyString)
+  
+    blocks.forEach(item => {
+      let binMessage = hex2bin(item)
+      let L, R, oldR, f, R15
+      for (let i = 15; i > -1; i--) {
+        if (i === 15) {
+          [R, R15] = finalDepermutation(binMessage) // R15 = L16, R16
+          console.log(`L${meziPocet}: `, R15, `R${meziPocet}: `, R)
+          meziPocet--
+        }
+        if (i > 0 && i < 15) {
+          if (i === 14) {
+            f = fFunction(R15, keys[i + 1])
+            L = xor(R, f)
+            console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R15) // L15, R15
+            R = R15
+            meziPocet--
+          }
+          oldR = L
+          f = fFunction(oldR, keys[i])
+          L = xor(R, f)
+          console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, oldR)
+          R = oldR
+          meziPocet--
+        }
+        if (i === 0) {
+          oldR = L
+          f = fFunction(oldR, keys[i])
+          L = xor(R, f)
+          console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, oldR)
+          meziPocet = 16
+          output += hex2string(bin2hex(initDepermutation(`${L}${oldR}`)))
+        }
+      }
+    })
+    dm.innerHTML = 'Dešifrovaná zpráva: ' + output
   } else {
     dcorrect = 0;
     dm.innerHTML = 'Zkontrolujte vstupní hodnoty!'
   }
+
+  // verze bez deleni na bloky
+  // if (dcorrect == 2) {
+  //   dcorrect = 0;
+  //   // HEX
+  //   let hexKey = string2hex(kd.value)
+  //   // BIN
+  //   let binMessage = hex2bin(td.value)
+  //   let binKeyString = hex2bin(hexKey)
+  //   permuteKey(binKeyString)
+  //   let L, R, oldL, oldR, f, R15
+  //   let meziPocet = 16
+  //   for (let i = 15; i > -1; i--) {
+  //     if (i === 15) {
+  //       [R, R15] = finalDepermutation(binMessage) // R15 = L16, R16
+  //       console.log(`L${meziPocet}: `, R15, `R${meziPocet}: `, R)
+  //       meziPocet--
+  //     }
+  //     if (i > 0 && i < 15) {
+  //       if (i === 14) {
+  //         f = fFunction(R15, keys[i + 1])
+  //         L = xor(R, f)
+  //         console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, R15) // L15, R15
+  //         R = R15
+  //         meziPocet--
+  //       }
+  //       oldR = L
+  //       f = fFunction(oldR, keys[i])
+  //       L = xor(R, f)
+  //       console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, oldR)
+  //       R = oldR
+  //       meziPocet--
+  //     }
+  //     if (i === 0) {
+  //       oldR = L
+  //       f = fFunction(oldR, keys[i])
+  //       L = xor(R, f)
+  //       console.log(`L${meziPocet}: `, L, `R${meziPocet}: `, oldR)
+  //       dm.innerHTML = 'Dešifrovaná zpráva: ' + hex2string(bin2hex(initDepermutation(`${L}${oldR}`)));
+  //     }
+  //   }
+  // } else {
+  //   dcorrect = 0;
+  //   dm.innerHTML = 'Zkontrolujte vstupní hodnoty!'
+  // }
 })
